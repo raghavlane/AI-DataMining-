@@ -44,25 +44,28 @@ def evaluateIndividual(df,features,ind):
 		if(ind[i] =='1'):
 			feat.append(features[i])
 	features=feat
-	X=df[features]
-	y=df['result']
-	accuracy_list=[]
-	precision_list=[]
-	recall_list=[]
-	skf = StratifiedKFold(n_splits=2)
-	for train_index, test_index in skf.split(X, y):
-		df.loc[train_index.tolist(),'is_train'] = True
-		df.loc[test_index.tolist(),'is_train'] = False
-		accuracy,recall,precision=trainTestData(df,pd,features)
-		accuracy_list.append(accuracy)
-		precision_list.append(precision)
-		recall_list.append(recall)
-	fin_accuracy= sum(accuracy_list)/len(accuracy_list)
-	fin_precision = sum(precision_list)/len(precision_list)
-	fin_recall = sum(recall_list)/len(recall_list)
-	fin_fitness = (0.6* fin_accuracy )+(0.2*fin_precision)+(0.2*fin_recall)
-	print ("fitness= " + str(fin_fitness))
-	return fin_fitness
+	if features ==[]:
+		return 0
+	else:
+		X=df[features]
+		y=df['result']
+		accuracy_list=[]
+		precision_list=[]
+		recall_list=[]
+		skf = StratifiedKFold(n_splits=2)
+		for train_index, test_index in skf.split(X, y):
+			df.loc[train_index.tolist(),'is_train'] = True
+			df.loc[test_index.tolist(),'is_train'] = False
+			accuracy,recall,precision=trainTestData(df,pd,features)
+			accuracy_list.append(accuracy)
+			precision_list.append(precision)
+			recall_list.append(recall)
+		fin_accuracy= sum(accuracy_list)/len(accuracy_list)
+		fin_precision = sum(precision_list)/len(precision_list)
+		fin_recall = sum(recall_list)/len(recall_list)
+		fin_fitness = (0.6* fin_accuracy )+(0.2*fin_precision)+(0.2*fin_recall)
+		return fin_fitness
+		
 globaldataframe= pd.DataFrame({'A' : []})
 def readData():
 	global globaldataframe
@@ -107,11 +110,9 @@ def main():
 	toolbox.register("individual", tools.initRepeat, creator.Individual, 
 		toolbox.attr_bool, 41)
 	toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-
+	df=readData()
+	features = df.columns[:41]
 	def evalOneMax(individual):
-		print(individual)
-		df=readData()
-		features = df.columns[:41]
 		return evaluateIndividual(df,features,"".join(str(individual))),
 
 
@@ -120,7 +121,7 @@ def main():
 	toolbox.register("mutate", tools.mutFlipBit, indpb=0.05)
 	toolbox.register("select", tools.selTournament, tournsize=3)
 
-	pop = toolbox.population(n=10)
+	pop = toolbox.population(n=20)
 
 	fitnesses = list(map(toolbox.evaluate, pop))
 	for ind, fit in zip(pop, fitnesses):
@@ -136,7 +137,7 @@ def main():
 	# Begin the evolution
 	maxfitness= []
 	meanfitness = []
-	while max(fits) < 0.95 and g < 100:
+	while max(fits) < 0.93 and g < 100:
 		# A new generation
 		g = g + 1
 		print("-- Generation %i --" % g)
@@ -178,7 +179,7 @@ def main():
 		print("  Std %s" % std)
 		grouped_maxfit = [(k, sum(1 for i in g)) for k,g in groupby(maxfitness)]
 		last_group = grouped_maxfit[len(grouped_maxfit)-1]
-		if ((last_group[0] == max(fits) )and (last_group[1]>=3)):
+		if ((last_group[0] == max(fits) )and (last_group[1]>=10)):
 			break
 	plt.plot(meanfitness)
 	plt.ylabel('mean fitness')
@@ -186,7 +187,26 @@ def main():
 	plt.plot(maxfitness)
 	plt.ylabel('max fitness')
 	plt.show()
-
+	maxfitpopulation = 0
+	maxfit = max(fits)
+	aggregatepop=[]
+	for ind, fit in zip(pop, fits):
+		if fit ==maxfit:
+			indlist = []
+			for x in ind:
+				indlist.append(x)
+			if aggregatepop==[]:
+				aggregatepop = indlist
+			else:
+				aggregatepop = [sum(x) for x in zip(aggregatepop, indlist)]
+			maxfitpopulation = maxfitpopulation+1
+	print("*************IMPORTANT FEATURES ARE*****************")
+	for indcount,feature in zip(aggregatepop,features):
+		if (indcount / maxfitpopulation ) > 0.49:
+			print (feature)
+	print("****************************************************")
+	print (aggregatepop)
+	print (maxfitpopulation)
 main()
 #df=readData()
 #features = df.columns[:41]
