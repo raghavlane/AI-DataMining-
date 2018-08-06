@@ -9,7 +9,10 @@ from deap import tools
 from itertools import groupby
 import matplotlib.pyplot as plt
 
-
+"""
+A method to do the machine learning part of training and testing the classifier
+and to return the classifier metrics
+"""
 def trainTestData(df,pd,features):
 	train, test = df[df['is_train']==True], df[df['is_train']==False]
 	target = pd.factorize(train['result'])[0]
@@ -37,13 +40,21 @@ def trainTestData(df,pd,features):
 	accuracy=(TP+TN)/len(test)
 	return accuracy,precision,recall
 	
-
+"""
+Fitness function
+Select the features
+use stratified k-fold validation
+get the metrics from the classifier
+calculate the average fitness and evaluate
+"""
 def evaluateIndividual(df,features,ind):
 	feat=[]
+	#binary to feature decoding 
 	for i in range (0,len(features)-1):
 		if(ind[i] =='1'):
 			feat.append(features[i])
 	features=feat
+	#If feature list is empty / Null check
 	if features ==[]:
 		return 0
 	else:
@@ -65,12 +76,15 @@ def evaluateIndividual(df,features,ind):
 		fin_recall = sum(recall_list)/len(recall_list)
 		fin_fitness = (0.6* fin_accuracy )+(0.2*fin_precision)+(0.2*fin_recall)
 		return fin_fitness
-		
+
+#Global data frame initialize to null
+#Global to have a copy of the data for next iterations
 globaldataframe= pd.DataFrame({'A' : []})
+
 def readData():
 	global globaldataframe
 	if globaldataframe.empty:
-		
+		# First time called, to load the data into program
 		##Constants used for mapping to numbers
 		protocol=['icmp','tcp','udp']
 		service=['http','smtp','finger','domain_u','auth','telnet','ftp','eco_i','ntp_u','ecr_i','other','private','pop_3','ftp_data','rje','time','mtp','link','remote_job','gopher','ssh','name','whois','domain','login','imap4','daytime','ctf','nntp','shell','IRC','nnsp','http_443','exec','printer','efs','courier','uucp','klogin','kshell','echo','discard','systat','supdup','iso_tsap','hostnames','csnet_ns','pop_2','sunrpc','uucp_path','netbios_ns','netbios_ssn','netbios_dgm','sql_net','vmnet','bgp','Z39_50','ldap','netstat','urh_i','X11','urp_i','pm_dump','tftp_u','tim_i','red_i']
@@ -78,6 +92,7 @@ def readData():
 		result=['normal.','buffer_overflow.','loadmodule.','perl.','neptune.','smurf.','guess_passwd.','pod.','teardrop.','portsweep.','ipsweep.','land.','ftp_write.','back.','imap.','satan.','phf.','nmap.','multihop.','warezmaster.','warezclient.','spy.','rootkit.']
 
 		#opening the features list and reading 
+		#please change the path accordingly
 		file =open('C:/Users/ragha/OneDrive/Desktop/ECE569A_Assignment1_V00890735/features.txt','r')
 		col=file.read().split('\n')
 		file.close()
@@ -85,6 +100,7 @@ def readData():
 
 
 		#opening the dataset, mapping the data to values and adding to data frame
+		#please change the path accordingly
 		filepath = 'C:/Users/ragha/OneDrive/Desktop/ECE569A_Assignment1_V00890735/kddcup.data_10_percent_corrected'
 		with open(filepath) as fp:
 			line = fp.readline()
@@ -99,7 +115,7 @@ def readData():
 	return globaldataframe
 	
 def main():
-		
+	
 	creator.create("FitnessMax", base.Fitness, weights=(1.0,))
 	creator.create("Individual", list, fitness=creator.FitnessMax)
 
@@ -179,8 +195,10 @@ def main():
 		print("  Std %s" % std)
 		grouped_maxfit = [(k, sum(1 for i in g)) for k,g in groupby(maxfitness)]
 		last_group = grouped_maxfit[len(grouped_maxfit)-1]
+		#exit condition , when the last 10 generations have the same max fitness
 		if ((last_group[0] == max(fits) )and (last_group[1]>=10)):
 			break
+	#Plotting the data into graph
 	plt.plot(meanfitness)
 	plt.ylabel('mean fitness')
 	plt.show()
@@ -189,6 +207,8 @@ def main():
 	plt.show()
 	maxfitpopulation = 0
 	maxfit = max(fits)
+	
+	# Decoding the features from the Binary population
 	aggregatepop=[]
 	for ind, fit in zip(pop, fits):
 		if fit ==maxfit:
@@ -208,6 +228,9 @@ def main():
 	print (aggregatepop)
 	print (maxfitpopulation)
 main()
-#df=readData()
-#features = df.columns[:41]
-#evaluateIndividual(df,features,"11111111111111111111111111111111111111111"),
+#uncomment below part to evaluate the complete set of features.
+"""
+df=readData()
+features = df.columns[:41]
+print(evaluateIndividual(df,features,"11111111111111111111111111111111111111111"))
+"""
