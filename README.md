@@ -4,5 +4,5 @@ An education Project for feature selection for an IDS using Genetic Algorithm an
 2. kddcup.data_10_percent_corrected is the dataset
 3. search.py contains the program. Change the path names if files before running.
 
-Uses Python3 , DEAP, scikitlearn and pandas
-command to run -  python search.py
+Uses Python3 , DEAP, scikitlearn and pandas.
+Command to run -  python search.py
